@@ -38,7 +38,7 @@ def home(request):
     else:
         form = ScoreInputForm()
 
-    return render(request, 'index.html', {'form': form})
+    return render(request, 'home.html', {'form': form})
 
 def calculate_score(request):
     if request.method == "POST":
