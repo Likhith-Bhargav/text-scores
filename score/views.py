@@ -1,4 +1,3 @@
-# views.py
 from django.http import JsonResponse
 from .education_model import EducationModel
 from .toxicity_model import ToxicityModel
@@ -6,12 +5,17 @@ from django.shortcuts import render
 from .forms import ScoreInputForm
 import logging
 
-# Initialize models once (to avoid reloading them for every request)
-education_model = EducationModel()
-toxicity_model = ToxicityModel()
-
 # Initialize logging
 logger = logging.getLogger(__name__)
+
+try:
+    # Initialization code for EducationModel and ToxicityModel
+    education_model = EducationModel()
+    toxicity_model = ToxicityModel()
+except Exception as e:
+    logger.error(f"Error initializing models: {str(e)}")
+    raise RuntimeError("Model initialization failed. Check logs for details.")
+
 
 def home(request):
     if request.method == 'POST':
@@ -19,26 +23,32 @@ def home(request):
         if form.is_valid():
             input_text = form.cleaned_data['text']
 
-            # Get scores from models
-            edu_score = education_model.get_score(input_text)['score']
-            toxicity_result = toxicity_model.get_score(input_text)
+            try:
+                # Get scores from models
+                edu_score = education_model.get_score(input_text)['score']
+                toxicity_result = toxicity_model.get_score(input_text)
 
-            neutral_score = toxicity_result['neutral_score']
-            toxic_score = toxicity_result['toxic_score']
+                neutral_score = toxicity_result['neutral_score']
+                toxic_score = toxicity_result['toxic_score']
 
-            # Prepare the response
-            response = {
-                "score using education model": edu_score,
-                "score using toxicity model for normal": neutral_score,
-                "score using toxicity model for toxic": toxic_score,
-            }
+                # Prepare the response
+                response = {
+                    "score using education model": edu_score,
+                    "score using toxicity model for normal": neutral_score,
+                    "score using toxicity model for toxic": toxic_score,
+                }
 
-            return JsonResponse(response)
+                return JsonResponse(response)
+
+            except Exception as e:
+                logger.error(f"Error processing request: {str(e)}")
+                return JsonResponse({"error": f"Error processing request: {str(e)}"}, status=500)
 
     else:
         form = ScoreInputForm()
 
     return render(request, 'home.html', {'form': form})
+
 
 def calculate_score(request):
     if request.method == "POST":
