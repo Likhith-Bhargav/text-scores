@@ -1,8 +1,8 @@
-# views.py
 from django.http import JsonResponse
+from django.shortcuts import render
+from django.views.decorators.csrf import csrf_exempt
 from .education_model import EducationModel
 from .toxicity_model import ToxicityModel
-from django.shortcuts import render
 from .forms import ScoreInputForm
 import logging
 
@@ -14,33 +14,43 @@ toxicity_model = ToxicityModel()
 logger = logging.getLogger(__name__)
 
 def home(request):
+    """
+    Render the home page with a form.
+    """
     if request.method == 'POST':
         form = ScoreInputForm(request.POST)
         if form.is_valid():
             input_text = form.cleaned_data['text']
 
             # Get scores from models
-            edu_score = education_model.get_score(input_text)['score']
-            toxicity_result = toxicity_model.get_score(input_text)
+            try:
+                edu_score = education_model.get_score(input_text)['score']
+                toxicity_result = toxicity_model.get_score(input_text)
 
-            neutral_score = toxicity_result['neutral_score']
-            toxic_score = toxicity_result['toxic_score']
+                neutral_score = toxicity_result['neutral_score']
+                toxic_score = toxicity_result['toxic_score']
 
-            # Prepare the response
-            response = {
-                "score using education model": edu_score,
-                "score using toxicity model for normal": neutral_score,
-                "score using toxicity model for toxic": toxic_score,
-            }
-
-            return JsonResponse(response)
-
+                # Prepare the response
+                response = {
+                    "score using education model": edu_score,
+                    "score using toxicity model for normal": neutral_score,
+                    "score using toxicity model for toxic": toxic_score,
+                }
+                return JsonResponse(response)
+            except Exception as e:
+                logger.error(f"Error calculating scores: {str(e)}")
+                return JsonResponse({"error": "Error calculating scores"}, status=500)
     else:
         form = ScoreInputForm()
 
     return render(request, 'home.html', {'form': form})
 
+
+@csrf_exempt
 def calculate_score(request):
+    """
+    API endpoint to calculate scores and return JSON response.
+    """
     if request.method == "POST":
         input_text = request.POST.get("input_text", "")
         if not input_text:

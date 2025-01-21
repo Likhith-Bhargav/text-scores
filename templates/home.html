@@ -5,37 +5,52 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Text Score Calculator</title>
     <script>
+        // Helper to get CSRF token from cookies
+        function getCsrfToken() {
+            const cookieValue = document.cookie.split('; ')
+                .find(row => row.startsWith('csrftoken='))
+                ?.split('=')[1];
+            return cookieValue || '';
+        }
+
         async function calculateScore() {
             const inputText = document.getElementById('inputText').value;
-            const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
-            const response = await fetch('/calculate_score/', {
-                method: 'POST',
-                body: new URLSearchParams({
-                    input_text: inputText,
-                    csrfmiddlewaretoken: csrfToken
-                }),
-                headers: {
-                    'Content-Type': 'application/x-www-form-urlencoded',
-                },
-                credentials: 'same-origin' // Send the cookie (which includes CSRF token)
-            });
-            const data = await response.json();
-            if (response.ok) {
-                document.getElementById('scoreResult').innerHTML = `
-                    <strong>Education Score:</strong> ${data.education_raw_score} <br>
-                    <strong>Toxicity:</strong> ${data.toxicity} <br>
-                    <strong>Neutral Toxicity Score:</strong> ${data.toxicity_scores.neutral} <br>
-                    <strong>Toxic Toxicity Score:</strong> ${data.toxicity_scores.toxic}
-                `;
-            } else {
-                document.getElementById('scoreResult').innerText = 'Error: ' + data.error;
+            const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]')?.value || getCsrfToken();
+
+            try {
+                const response = await fetch('/calculate_score/', {
+                    method: 'POST',
+                    body: new URLSearchParams({
+                        input_text: inputText,
+                        csrfmiddlewaretoken: csrfToken
+                    }),
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                    },
+                    credentials: 'same-origin' // Send cookies with the request
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    document.getElementById('scoreResult').innerHTML = `
+                        <strong>Education Score:</strong> ${data.education_raw_score} <br>
+                        <strong>Toxicity:</strong> ${data.toxicity} <br>
+                        <strong>Neutral Toxicity Score:</strong> ${data.toxicity_scores.neutral} <br>
+                        <strong>Toxic Toxicity Score:</strong> ${data.toxicity_scores.toxic}
+                    `;
+                } else {
+                    document.getElementById('scoreResult').innerText = 'Error: ' + data.error;
+                }
+            } catch (error) {
+                document.getElementById('scoreResult').innerText = 'An error occurred: ' + error.message;
             }
         }
     </script>
 </head>
 <body>
     <h1>Text Score Calculator</h1>
-    <form onsubmit="event.preventDefault(); calculateScore();">
+    <form method="POST" onsubmit="event.preventDefault(); calculateScore();">
         {% csrf_token %}
         <label for="inputText">Enter Text:</label>
         <textarea id="inputText" rows="4" cols="50"></textarea>
