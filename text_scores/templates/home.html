@@ -43,55 +43,5 @@
     </form>
 
     <p id="scoreResult"></p>
-
-    <h2>Previous Records</h2>
-    <table border="1">
-        <thead>
-            <tr>
-                <th>Text</th>
-                <th>Education Score</th>
-                <th>Neutral Score</th>
-                <th>Toxic Score</th>
-                <th>Toxicity Classification</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for record in page_obj %}
-                <tr>
-                    <td>{{ record.entered_text }}</td>
-                    <td>{{ record.education_score }}</td>
-                    <td>{{ record.toxicity_score_normal }}</td>
-                    <td>{{ record.toxicity_score_toxic }}</td>
-                    <td>
-                        {% if record.toxicity_score_normal > record.toxicity_score_toxic %}
-                            Normal
-                        {% else %}
-                            Toxic
-                        {% endif %}
-                    </td>
-                </tr>
-            {% empty %}
-                <tr>
-                    <td colspan="5">No records found</td>
-                </tr>
-            {% endfor %}
-        </tbody>
-    </table>
-
-    <div>
-        <span>
-            {% if page_obj.has_previous %}
-                <a href="?page={{ page_obj.previous_page_number }}">Previous</a>
-            {% endif %}
-        </span>
-        <span>
-            Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
-        </span>
-        <span>
-            {% if page_obj.has_next %}
-                <a href="?page={{ page_obj.next_page_number }}">Next</a>
-            {% endif %}
-        </span>
-    </div>
 </body>
 </html>
