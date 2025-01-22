@@ -8,33 +8,27 @@
         async function calculateScore() {
             const inputText = document.getElementById('inputText').value;
             const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
-
-            try {
-                const response = await fetch('/calculate_score/', {
-                    method: 'POST',
-                    body: new URLSearchParams({
-                        input_text: inputText,
-                        csrfmiddlewaretoken: csrfToken
-                    }),
-                    headers: {
-                        'Content-Type': 'application/x-www-form-urlencoded',
-                    },
-                    credentials: 'same-origin' // Include credentials for CSRF protection
-                });
-
-                const data = await response.json();
-                if (response.ok) {
-                    document.getElementById('scoreResult').innerHTML = `
-                        <strong>Education Score:</strong> ${data.education_raw_score} <br>
-                        <strong>Toxicity:</strong> ${data.toxicity} <br>
-                        <strong>Neutral Toxicity Score:</strong> ${data.toxicity_scores.neutral} <br>
-                        <strong>Toxic Toxicity Score:</strong> ${data.toxicity_scores.toxic}
-                    `;
-                } else {
-                    throw new Error(data.error || 'Request failed');
-                }
-            } catch (error) {
-                document.getElementById('scoreResult').innerText = 'Error: ' + error.message;
+            const response = await fetch('/calculate_score/', {
+                method: 'POST',
+                body: new URLSearchParams({
+                    input_text: inputText,
+                    csrfmiddlewaretoken: csrfToken
+                }),
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                credentials: 'same-origin' // Send the cookie (which includes CSRF token)
+            });
+            const data = await response.json();
+            if (response.ok) {
+                document.getElementById('scoreResult').innerHTML = `
+                    <strong>Education Score:</strong> ${data.education_raw_score} <br>
+                    <strong>Toxicity:</strong> ${data.toxicity} <br>
+                    <strong>Neutral Toxicity Score:</strong> ${data.toxicity_scores.neutral} <br>
+                    <strong>Toxic Toxicity Score:</strong> ${data.toxicity_scores.toxic}
+                `;
+            } else {
+                document.getElementById('scoreResult').innerText = 'Error: ' + data.error;
             }
         }
     </script>
@@ -44,10 +38,60 @@
     <form onsubmit="event.preventDefault(); calculateScore();">
         {% csrf_token %}
         <label for="inputText">Enter Text:</label>
-        <textarea id="inputText" rows="4" cols="50" placeholder="Type your text here..."></textarea>
+        <textarea id="inputText" rows="4" cols="50"></textarea>
         <button type="submit">Calculate Score</button>
     </form>
 
-    <div id="scoreResult" style="margin-top: 20px; font-weight: bold;"></div>
+    <p id="scoreResult"></p>
+
+    <h2>Previous Records</h2>
+    <table border="1">
+        <thead>
+            <tr>
+                <th>Text</th>
+                <th>Education Score</th>
+                <th>Neutral Score</th>
+                <th>Toxic Score</th>
+                <th>Toxicity Classification</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for record in page_obj %}
+                <tr>
+                    <td>{{ record.entered_text }}</td>
+                    <td>{{ record.education_score }}</td>
+                    <td>{{ record.toxicity_score_normal }}</td>
+                    <td>{{ record.toxicity_score_toxic }}</td>
+                    <td>
+                        {% if record.toxicity_score_normal > record.toxicity_score_toxic %}
+                            Normal
+                        {% else %}
+                            Toxic
+                        {% endif %}
+                    </td>
+                </tr>
+            {% empty %}
+                <tr>
+                    <td colspan="5">No records found</td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <div>
+        <span>
+            {% if page_obj.has_previous %}
+                <a href="?page={{ page_obj.previous_page_number }}">Previous</a>
+            {% endif %}
+        </span>
+        <span>
+            Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
+        </span>
+        <span>
+            {% if page_obj.has_next %}
+                <a href="?page={{ page_obj.next_page_number }}">Next</a>
+            {% endif %}
+        </span>
+    </div>
 </body>
 </html>
