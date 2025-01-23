@@ -2,7 +2,6 @@ from django.http import JsonResponse
 from django.shortcuts import render
 from django.core.paginator import Paginator
 from django.views.decorators.csrf import csrf_exempt
-from django.utils.decorators import method_decorator
 from .education_model import EducationModel
 from .toxicity_model import ToxicityModel
 from .forms import ScoreInputForm
