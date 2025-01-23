@@ -7,9 +7,11 @@
     <!-- CSRF Token Meta Tag -->
     <meta name="csrf-token" content="{{ csrf_token }}">
     <script>
+        // This function will be called when the form is submitted
         async function calculateScore() {
             const inputText = document.getElementById('inputText').value.trim();
 
+            // Check if input text is empty
             if (!inputText) {
                 document.getElementById('scoreResult').innerText = 'Please enter some text.';
                 return;
@@ -25,7 +27,7 @@
                     method: 'POST',
                     body: new URLSearchParams({
                         input_text: inputText,
-                        csrfmiddlewaretoken: csrfToken
+                        csrfmiddlewaretoken: csrfToken  // CSRF token included in the POST data
                     }),
                     headers: {
                         'Content-Type': 'application/x-www-form-urlencoded',
@@ -38,6 +40,8 @@
                 if (response.ok) {
                     const data = await response.json();
                     console.log('Response data:', data);
+
+                    // Displaying the result
                     document.getElementById('scoreResult').innerHTML = `
                         <strong>Education Score:</strong> ${data.education_raw_score} <br>
                         <strong>Toxicity:</strong> ${data.toxicity} <br>
