@@ -75,16 +75,19 @@ WSGI_APPLICATION = 'text_scores.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/4.2/ref/settings/#databases
 
+import os
+
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'scores',
-        'USER': 'postgres',
-        'PASSWORD': 'Soch@2608',  # Replace with the actual password
-        'HOST': 'localhost',
-        'PORT': '5432',
+        'NAME': os.getenv('DB_NAME', 'scores'),
+        'USER': os.getenv('DB_USER', 'postgres'),
+        'PASSWORD': os.getenv('DB_PASSWORD', 'Soch@2608'),  # Replace default with a secure default for production
+        'HOST': os.getenv('DB_HOST', 'localhost'),
+        'PORT': os.getenv('DB_PORT', '5432'),
     }
 }
+
 
 # Password validation
 # https://docs.djangoproject.com/en/4.2/ref/settings/#auth-password-validators
@@ -138,3 +141,4 @@ CORS_ALLOWED_ORIGINS = [
 ]
 
 CSRF_COOKIE_SECURE = False
+
