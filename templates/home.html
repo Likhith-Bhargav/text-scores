@@ -10,16 +10,17 @@
         async function calculateScore() {
             const inputText = document.getElementById('inputText').value.trim();
 
-            // Validate input before sending the request
             if (!inputText) {
                 document.getElementById('scoreResult').innerText = 'Please enter some text.';
                 return;
             }
 
-            // Fetch the CSRF token dynamically from the meta tag
+            // Get CSRF token from the meta tag
             const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
 
             try {
+                console.log('Sending request to /calculate_score/ with inputText:', inputText);
+
                 const response = await fetch('/calculate_score/', {
                     method: 'POST',
                     body: new URLSearchParams({
@@ -29,11 +30,14 @@
                     headers: {
                         'Content-Type': 'application/x-www-form-urlencoded',
                     },
-                    credentials: 'same-origin' // Ensures cookies are sent with the request
+                    credentials: 'same-origin',  // Ensures cookies (CSRF token) are sent with the request
                 });
+
+                console.log('Response received:', response);
 
                 if (response.ok) {
                     const data = await response.json();
+                    console.log('Response data:', data);
                     document.getElementById('scoreResult').innerHTML = `
                         <strong>Education Score:</strong> ${data.education_raw_score} <br>
                         <strong>Toxicity:</strong> ${data.toxicity} <br>
@@ -42,6 +46,7 @@
                     `;
                 } else {
                     const errorData = await response.json();
+                    console.log('Error response:', errorData);
                     document.getElementById('scoreResult').innerText =
                         `Error: ${errorData.error || 'Unable to calculate score.'}`;
                 }

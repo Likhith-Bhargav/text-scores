@@ -35,6 +35,9 @@ def calculate_scores(input_text):
         raise e
 
 def home(request):
+    """
+    Handles the home page, including form submissions for score calculations.
+    """
     # Fetch all records and paginate them
     records = TextScore.objects.all().order_by('-id')  # Order by most recent
     paginator = Paginator(records, 5)  # 5 records per page
@@ -72,9 +75,9 @@ def home(request):
 
                 # Prepare response
                 response = {
-                    "score using education model": edu_score,
-                    "score using toxicity model for normal": neutral_score,
-                    "score using toxicity model for toxic": toxic_score,
+                    "score_using_education_model": edu_score,
+                    "score_using_toxicity_model_for_normal": neutral_score,
+                    "score_using_toxicity_model_for_toxic": toxic_score,
                     "toxicity_classification": toxicity_classification,
                 }
                 return JsonResponse(response)
@@ -90,8 +93,12 @@ def home(request):
 
 @csrf_exempt
 def calculate_score(request):
+    """
+    Handle AJAX request for calculating scores for input text.
+    """
     if request.method == "POST":
         input_text = request.POST.get("input_text", "").strip()
+
         if not input_text:
             return JsonResponse({"error": "No text provided"}, status=400)
 
@@ -136,4 +143,5 @@ def calculate_score(request):
             logger.error(f"Error handling calculate_score request: {str(e)}")
             return JsonResponse({"error": "An error occurred while calculating scores."}, status=500)
 
+    # Return error if not POST
     return JsonResponse({"error": "Invalid request method"}, status=405)

@@ -136,3 +136,5 @@ CORS_ALLOWED_ORIGINS = [
     'https://likhith-bhargav.github.io',
     'https://www.likhith-bhargav.github.io'
 ]
+
+CSRF_COOKIE_SECURE = False
