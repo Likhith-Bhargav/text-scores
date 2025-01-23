@@ -2,10 +2,11 @@ from django.http import JsonResponse
 from django.shortcuts import render
 from django.core.paginator import Paginator
 from django.views.decorators.csrf import csrf_exempt
+
+from score.models import TextScore, TextCount
 from .education_model import EducationModel
 from .toxicity_model import ToxicityModel
 from .forms import ScoreInputForm
-from .models import TextScore, TextCount
 import logging
 
 # Initialize models once (to avoid reloading them for every request)
