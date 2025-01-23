@@ -1,8 +1,9 @@
-# views.py
 from django.http import JsonResponse
+from django.shortcuts import render
+from django.views.decorators.http import require_POST
+from django.views.decorators.csrf import csrf_exempt
 from .education_model import EducationModel
 from .toxicity_model import ToxicityModel
-from django.shortcuts import render
 from .forms import ScoreInputForm
 import logging
 
@@ -12,6 +13,7 @@ toxicity_model = ToxicityModel()
 
 # Initialize logging
 logger = logging.getLogger(__name__)
+
 
 def home(request):
     if request.method == 'POST':
@@ -33,40 +35,39 @@ def home(request):
                 "score using toxicity model for toxic": toxic_score,
             }
 
-            return JsonResponse(response)
+            return JsonResponse(response, status=200)
 
     else:
         form = ScoreInputForm()
 
     return render(request, 'home.html', {'form': form})
 
+
+@require_POST
 def calculate_score(request):
-    if request.method == "POST":
-        input_text = request.POST.get("input_text", "")
-        if not input_text:
-            return JsonResponse({"error": "No text provided"}, status=400)
+    input_text = request.POST.get("input_text", "")
+    if not input_text:
+        return JsonResponse({"error": "No text provided"}, status=400)
 
-        try:
-            # Get scores from both models
-            education_result = education_model.get_score(input_text)
-            toxicity_result = toxicity_model.get_score(input_text)
+    try:
+        # Get scores from both models
+        education_result = education_model.get_score(input_text)
+        toxicity_result = toxicity_model.get_score(input_text)
 
-            # Convert scores to JSON-serializable format
-            result = {
-                "score": float(education_result.get("int_score", 0)),
-                "education_raw_score": float(education_result.get("score", 0.0)),
-                "toxicity": toxicity_result.get("classification", ""),
-                "toxicity_scores": {
-                    "neutral": float(toxicity_result.get("neutral_score", 0.0)),
-                    "toxic": float(toxicity_result.get("toxic_score", 0.0)),
-                },
-            }
+        # Convert scores to JSON-serializable format
+        result = {
+            "score": float(education_result.get("int_score", 0)),
+            "education_raw_score": float(education_result.get("score", 0.0)),
+            "toxicity": toxicity_result.get("classification", ""),
+            "toxicity_scores": {
+                "neutral": float(toxicity_result.get("neutral_score", 0.0)),
+                "toxic": float(toxicity_result.get("toxic_score", 0.0)),
+            },
+        }
 
-            logger.info(f"Result: {result}")
-            return JsonResponse(result)
+        logger.info(f"Result: {result}")
+        return JsonResponse(result, status=200)
 
-        except Exception as e:
-            logger.error(f"Error calculating scores: {str(e)}")
-            return JsonResponse({"error": f"Error calculating scores: {str(e)}"}, status=500)
-
-    return JsonResponse({"error": "Invalid request method"}, status=405)
+    except Exception as e:
+        logger.error(f"Error calculating scores: {str(e)}")
+        return JsonResponse({"error": f"Error calculating scores: {str(e)}"}, status=500)
