@@ -4,44 +4,130 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Text Score Calculator</title>
+    <!-- CSRF Token Meta Tag -->
+    <meta name="csrf-token" content="{{ csrf_token }}">
+    <!-- Link to External CSS -->
+    <link rel="stylesheet" href="/static/css/styles.css">
     <script>
+        // This function will be called when the form is submitted
         async function calculateScore() {
-            const inputText = document.getElementById('inputText').value;
-            const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
-            const response = await fetch('/calculate_score/', {
-                method: 'POST',
-                body: new URLSearchParams({
-                    input_text: inputText,
-                    csrfmiddlewaretoken: csrfToken
-                }),
-                headers: {
-                    'Content-Type': 'application/x-www-form-urlencoded',
-                },
-                credentials: 'same-origin' // Send the cookie (which includes CSRF token)
-            });
-            const data = await response.json();
-            if (response.ok) {
-                document.getElementById('scoreResult').innerHTML = `
-                    <strong>Education Score:</strong> ${data.education_raw_score} <br>
-                    <strong>Toxicity:</strong> ${data.toxicity} <br>
-                    <strong>Neutral Toxicity Score:</strong> ${data.toxicity_scores.neutral} <br>
-                    <strong>Toxic Toxicity Score:</strong> ${data.toxicity_scores.toxic}
-                `;
-            } else {
-                document.getElementById('scoreResult').innerText = 'Error: ' + data.error;
+            const inputText = document.getElementById('inputText').value.trim();
+
+            // Check if input text is empty
+            if (!inputText) {
+                document.getElementById('scoreResult').innerText = 'Please enter some text.';
+                return;
+            }
+
+            // Get CSRF token from the meta tag
+            const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+
+            try {
+                console.log('Sending request to /calculate_score/ with inputText:', inputText);
+
+                const response = await fetch('/calculate_score/', {
+                    method: 'POST',
+                    body: new URLSearchParams({
+                        input_text: inputText,
+                        csrfmiddlewaretoken: csrfToken  // CSRF token included in the POST data
+                    }),
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                    },
+                    credentials: 'same-origin',  // Ensures cookies (CSRF token) are sent with the request
+                });
+
+                console.log('Response received:', response);
+
+                if (response.ok) {
+                    const data = await response.json();
+                    console.log('Response data:', data);
+
+                    // Displaying the result
+                    document.getElementById('scoreResult').innerHTML = `
+                        <strong>Education Score:</strong> ${data.education_raw_score} <br>
+                        <strong>Toxicity:</strong> ${data.toxicity} <br>
+                        <strong>Neutral Toxicity Score:</strong> ${data.toxicity_scores.neutral} <br>
+                        <strong>Toxic Toxicity Score:</strong> ${data.toxicity_scores.toxic}
+                    `;
+                } else {
+                    const errorData = await response.json();
+                    console.log('Error response:', errorData);
+                    document.getElementById('scoreResult').innerText =
+                        `Error: ${errorData.error || 'Unable to calculate score.'}`;
+                }
+            } catch (error) {
+                console.error('Error occurred:', error);
+                document.getElementById('scoreResult').innerText = 'An error occurred. Please try again.';
             }
         }
     </script>
 </head>
 <body>
-    <h1>Text Score Calculator</h1>
-    <form onsubmit="event.preventDefault(); calculateScore();">
-        {% csrf_token %}
-        <label for="inputText">Enter Text:</label>
-        <textarea id="inputText" rows="4" cols="50"></textarea>
-        <button type="submit">Calculate Score</button>
-    </form>
+<h1>Text Score Calculator</h1>
 
-    <p id="scoreResult"></p>
+<!-- Form with Event Handler for AJAX Submission -->
+<form onsubmit="event.preventDefault(); calculateScore();">
+    <label for="inputText">Enter Text:</label>
+    <textarea id="inputText" rows="4" cols="50"></textarea>
+    <button type="submit">Calculate Score</button>
+</form>
+
+<!-- Placeholder for Displaying Results -->
+<p id="scoreResult"></p>
+
+<h2>Previous Records</h2>
+
+<!-- Table for Previous Records -->
+<table border="1">
+    <thead>
+    <tr>
+        <th>Text</th>
+        <th>Education Score</th>
+        <th>Neutral Score</th>
+        <th>Toxic Score</th>
+        <th>Toxicity Classification</th>
+    </tr>
+    </thead>
+    <tbody>
+    {% for record in page_obj %}
+    <tr>
+        <td>{{ record.entered_text }}</td>
+        <td>{{ record.education_score }}</td>
+        <td>{{ record.toxicity_score_normal }}</td>
+        <td>{{ record.toxicity_score_toxic }}</td>
+        <td>
+            {% if record.toxicity_score_normal > record.toxicity_score_toxic %}
+            Normal
+            {% else %}
+            Toxic
+            {% endif %}
+        </td>
+    </tr>
+    {% empty %}
+    <tr>
+        <td colspan="5">No records found</td>
+    </tr>
+    {% endfor %}
+    </tbody>
+</table>
+
+<!-- Pagination Controls -->
+<div>
+    <span>
+        {% if page_obj.has_previous %}
+        <a href="?page={{ page_obj.previous_page_number }}">Previous</a>
+        {% endif %}
+    </span>
+    <span>
+        Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
+    </span>
+    <span>
+        {% if page_obj.has_next %}
+        <a href="?page={{ page_obj.next_page_number }}">Next</a>
+        {% endif %}
+    </span>
+</div>
+
 </body>
 </html>
