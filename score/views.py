@@ -9,25 +9,19 @@ from .models import TextScore, TextCount
 import logging
 
 
-# Initialize models once (to avoid reloading them for every request)
 education_model = EducationModel()
 toxicity_model = ToxicityModel()
 
-# Initialize logging
 logger = logging.getLogger(__name__)
 
 def calculate_scores(input_text):
-    """
-    Helper function to calculate scores and determine toxicity classification.
-    """
+
     try:
-        # Calculate scores
         edu_score = education_model.get_score(input_text)['score']
         toxicity_result = toxicity_model.get_score(input_text)
         neutral_score = toxicity_result['neutral_score']
         toxic_score = toxicity_result['toxic_score']
 
-        # Determine toxicity classification
         toxicity_classification = "Normal" if neutral_score > toxic_score else "Toxic"
 
         return edu_score, neutral_score, toxic_score, toxicity_classification
@@ -36,12 +30,8 @@ def calculate_scores(input_text):
         raise e
 
 def home(request):
-    """
-    Handles the home page, including form submissions for score calculations.
-    """
-    # Fetch all records and paginate them
-    records = TextScore.objects.all().order_by('-id')  # Order by most recent
-    paginator = Paginator(records, 5)  # 5 records per page
+    records = TextScore.objects.all().order_by('-id')
+    paginator = Paginator(records, 5)
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
 
@@ -52,21 +42,17 @@ def home(request):
             try:
                 edu_score, neutral_score, toxic_score, toxicity_classification = calculate_scores(input_text)
 
-                # Check if the input already exists in the database
                 existing_entry = TextScore.objects.filter(entered_text=input_text).first()
                 if existing_entry:
-                    # Update existing entry
                     existing_entry.education_score = edu_score
                     existing_entry.toxicity_score_normal = neutral_score
                     existing_entry.toxicity_score_toxic = toxic_score
                     existing_entry.save()
 
-                    # Update TextCount
                     text_count_entry, created = TextCount.objects.get_or_create(text=input_text)
                     text_count_entry.count = text_count_entry.count + 1 if not created else 2
                     text_count_entry.save()
                 else:
-                    # Create new entry
                     TextScore.objects.create(
                         entered_text=input_text,
                         education_score=edu_score,
@@ -74,7 +60,6 @@ def home(request):
                         toxicity_score_toxic=toxic_score,
                     )
 
-                # Prepare response
                 response = {
                     "score_using_education_model": edu_score,
                     "score_using_toxicity_model_for_normal": neutral_score,
@@ -94,9 +79,7 @@ def home(request):
 
 @csrf_exempt
 def calculate_score(request):
-    """
-    Handle AJAX request for calculating scores for input text.
-    """
+
     if request.method == "POST":
         input_text = request.POST.get("input_text", "").strip()
 
@@ -106,21 +89,17 @@ def calculate_score(request):
         try:
             edu_score, neutral_score, toxic_score, toxicity_classification = calculate_scores(input_text)
 
-            # Check if the input already exists in the database
             existing_entry = TextScore.objects.filter(entered_text=input_text).first()
             if existing_entry:
-                # Update existing entry
                 existing_entry.education_score = edu_score
                 existing_entry.toxicity_score_normal = neutral_score
                 existing_entry.toxicity_score_toxic = toxic_score
                 existing_entry.save()
 
-                # Update TextCount
                 text_count_entry, created = TextCount.objects.get_or_create(text=input_text)
                 text_count_entry.count = text_count_entry.count + 1 if not created else 2
                 text_count_entry.save()
             else:
-                # Create new entry
                 TextScore.objects.create(
                     entered_text=input_text,
                     education_score=edu_score,
@@ -128,7 +107,6 @@ def calculate_score(request):
                     toxicity_score_toxic=toxic_score,
                 )
 
-            # Prepare response
             result = {
                 "score": edu_score,
                 "education_raw_score": edu_score,
@@ -144,35 +122,28 @@ def calculate_score(request):
             logger.error(f"Error handling calculate_score request: {str(e)}")
             return JsonResponse({"error": "An error occurred while calculating scores."}, status=500)
 
-    # Return error if not POST
     return JsonResponse({"error": "Invalid request method"}, status=405)
 
 from django.http import JsonResponse
-from .models import TextScore  # Import the TextScore model
+from .models import TextScore
 import logging
 
-# Initialize logging
 logger = logging.getLogger(__name__)
 
 def get_all_scores(request):
     try:
-        # Query all records from the TextScore table
         text_scores = TextScore.objects.all()
 
-        # Prepare the data to return as JSON
         data = []
 
-        # Iterate over the records
         for record in text_scores:
-            # Prepare the result based on correct model field names
             data.append({
-                'entered_text': record.entered_text,  # Use 'entered_text' from the model
-                'education_score': record.education_score,  # Use 'education_score' from the model
-                'neutral_score': record.toxicity_score_normal,  # Use 'toxicity_score_normal' as neutral score
-                'toxicity_score': record.toxicity_score_toxic,  # Use 'toxicity_score_toxic' as toxic score
+                'entered_text': record.entered_text,
+                'education_score': record.education_score,
+                'neutral_score': record.toxicity_score_normal,
+                'toxicity_score': record.toxicity_score_toxic,
             })
 
-        # Return the processed data as JSON
         return JsonResponse(data, safe=False)
 
     except Exception as e:

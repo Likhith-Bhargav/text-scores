@@ -1,6 +1,4 @@
-/* styles.css */
 
-/* General styling */
 body {
     font-family: Arial, sans-serif;
     margin: 20px;
@@ -9,13 +7,11 @@ body {
     color: #333;
 }
 
-/* Header styling */
 h1 {
     text-align: center;
     color: #4CAF50;
 }
 
-/* Form styling */
 form {
     margin: 20px 0;
     padding: 10px;
@@ -47,14 +43,12 @@ button:hover {
     background: #45a049;
 }
 
-/* Result display */
 #scoreResult {
     margin-top: 15px;
     font-size: 16px;
     color: #555;
 }
 
-/* Table styling */
 table {
     width: 100%;
     border-collapse: collapse;
@@ -76,7 +70,6 @@ table tr:nth-child(even) {
     background-color: #f9f9f9;
 }
 
-/* Pagination styling */
 div {
     text-align: center;
     margin-top: 20px;

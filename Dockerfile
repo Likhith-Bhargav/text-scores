@@ -14,15 +14,21 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libpq-dev \
     && rm -rf /var/lib/apt/lists/*
 
-# Copy the current directory contents into the container at /app
-COPY . /app/
+# Copy only requirements.txt to leverage Docker's caching
+COPY requirements.txt /app/
 
-# Upgrade pip and install dependencies from requirements.txt
+# Upgrade pip and install dependencies
 RUN pip install --upgrade pip
 RUN pip install --no-cache-dir -r requirements.txt
 
+# Copy the rest of the project
+COPY . /app/
+
 # Expose the port the app will run on
 EXPOSE 8000
+
+# Collect static files (optional for production)
+# RUN python manage.py collectstatic --noinput
 
 # Command to run the Django development server
 CMD ["python", "manage.py", "runserver", "0.0.0.0:8000"]

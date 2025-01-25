@@ -140,21 +140,17 @@
 <body>
 <h1>Text Score Calculator</h1>
 
-<!-- Form to calculate score -->
 <form onsubmit="event.preventDefault(); calculateScore();">
     <label for="inputText">Enter Text:</label>
     <textarea id="inputText" rows="4" cols="50"></textarea>
     <button type="submit">Calculate Score</button>
 </form>
 
-<!-- Displaying the result -->
 <p id="scoreResult"></p>
 
-<!-- Scatterplot Section -->
 <h2>Education Score vs Neutral Score Scatterplot</h2>
 <canvas id="scatterChart" width="600" height="400"></canvas>
 
-<!-- Table for previous records -->
 <h2>Previous Records</h2>
 <table border="1">
     <thead>
@@ -189,7 +185,6 @@
     </tbody>
 </table>
 
-<!-- Pagination Controls -->
 <div>
     <span>
         {% if page_obj.has_previous %}
