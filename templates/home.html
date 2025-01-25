@@ -4,12 +4,83 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Text Score Calculator</title>
-    <!-- CSRF Token Meta Tag -->
     <meta name="csrf-token" content="{{ csrf_token }}">
-    <!-- Link to External CSS -->
     <link rel="stylesheet" href="/static/css/styles.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script>
-        // This function will be called when the form is submitted
+        // Function to fetch all data from the backend and plot the scatterplot
+        async function fetchAndPlotGraph() {
+            try {
+                const response = await fetch('/get_all_scores/'); // Replace with the actual endpoint
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const data = await response.json();
+
+                // Extracting x and y data from the response
+                const xData = data.map(record => record.neutral_score);
+                const yData = data.map(record => record.education_score);
+
+                // Preparing the data for Chart.js
+                const chartData = {
+                    labels: xData,
+                    datasets: [{
+                        label: 'Education vs Neutral Score',
+                        data: data.map(record => ({ x: record.neutral_score, y: record.education_score })),
+                        backgroundColor: 'rgba(75, 192, 192, 0.6)',
+                        borderColor: 'rgba(75, 192, 192, 1)',
+                        borderWidth: 1
+                    }]
+                };
+
+                // Chart configuration
+                const config = {
+                    type: 'scatter',
+                    data: chartData,
+                    options: {
+                        scales: {
+                            x: {
+                                title: {
+                                    display: true,
+                                    text: 'Neutral Score'
+                                },
+                                min: 0, // x-axis range from 0 to 1
+                                max: 1,
+                                ticks: {
+                                    stepSize: 0.05, // x-axis tick spacing of 0.05
+                                }
+                            },
+                            y: {
+                                title: {
+                                    display: true,
+                                    text: 'Education Score'
+                                },
+                                min: -1, // y-axis range from -1 to 1
+                                max: 1,
+                                ticks: {
+                                    stepSize: 0.1, // y-axis tick spacing of 0.1
+                                }
+                            }
+                        },
+                        plugins: {
+                            legend: {
+                                display: true
+                            }
+                        }
+                    }
+                };
+
+                // Create and render the chart
+                const ctx = document.getElementById('scatterChart').getContext('2d');
+                new Chart(ctx, config);
+            } catch (error) {
+                console.error('Error fetching or plotting data:', error);
+                alert('An error occurred while fetching data for the graph. Please try again.');
+            }
+        }
+
+        // Function to calculate the score
         async function calculateScore() {
             const inputText = document.getElementById('inputText').value.trim();
 
@@ -61,24 +132,30 @@
                 document.getElementById('scoreResult').innerText = 'An error occurred. Please try again.';
             }
         }
+
+        // Call the function to fetch and plot graph when the page loads
+        window.onload = fetchAndPlotGraph;
     </script>
 </head>
 <body>
 <h1>Text Score Calculator</h1>
 
-<!-- Form with Event Handler for AJAX Submission -->
+<!-- Form to calculate score -->
 <form onsubmit="event.preventDefault(); calculateScore();">
     <label for="inputText">Enter Text:</label>
     <textarea id="inputText" rows="4" cols="50"></textarea>
     <button type="submit">Calculate Score</button>
 </form>
 
-<!-- Placeholder for Displaying Results -->
+<!-- Displaying the result -->
 <p id="scoreResult"></p>
 
-<h2>Previous Records</h2>
+<!-- Scatterplot Section -->
+<h2>Education Score vs Neutral Score Scatterplot</h2>
+<canvas id="scatterChart" width="600" height="400"></canvas>
 
-<!-- Table for Previous Records -->
+<!-- Table for previous records -->
+<h2>Previous Records</h2>
 <table border="1">
     <thead>
     <tr>
@@ -119,9 +196,7 @@
         <a href="?page={{ page_obj.previous_page_number }}">Previous</a>
         {% endif %}
     </span>
-    <span>
-        Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
-    </span>
+    <span>Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
     <span>
         {% if page_obj.has_next %}
         <a href="?page={{ page_obj.next_page_number }}">Next</a>

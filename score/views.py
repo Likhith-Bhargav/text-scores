@@ -8,6 +8,7 @@ from .forms import ScoreInputForm
 from .models import TextScore, TextCount
 import logging
 
+
 # Initialize models once (to avoid reloading them for every request)
 education_model = EducationModel()
 toxicity_model = ToxicityModel()
@@ -145,3 +146,36 @@ def calculate_score(request):
 
     # Return error if not POST
     return JsonResponse({"error": "Invalid request method"}, status=405)
+
+from django.http import JsonResponse
+from .models import TextScore  # Import the TextScore model
+import logging
+
+# Initialize logging
+logger = logging.getLogger(__name__)
+
+def get_all_scores(request):
+    try:
+        # Query all records from the TextScore table
+        text_scores = TextScore.objects.all()
+
+        # Prepare the data to return as JSON
+        data = []
+
+        # Iterate over the records
+        for record in text_scores:
+            # Prepare the result based on correct model field names
+            data.append({
+                'entered_text': record.entered_text,  # Use 'entered_text' from the model
+                'education_score': record.education_score,  # Use 'education_score' from the model
+                'neutral_score': record.toxicity_score_normal,  # Use 'toxicity_score_normal' as neutral score
+                'toxicity_score': record.toxicity_score_toxic,  # Use 'toxicity_score_toxic' as toxic score
+            })
+
+        # Return the processed data as JSON
+        return JsonResponse(data, safe=False)
+
+    except Exception as e:
+        # Log the error for debugging
+        logger.error(f"Error in get_all_scores: {e}")
+        return JsonResponse({'error': f'An error occurred: {str(e)}'}, status=500)
