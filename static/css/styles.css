@@ -1,93 +1,183 @@
-
+/* General styling */
 body {
     font-family: Arial, sans-serif;
-    margin: 20px;
+    line-height: 1.6;
+    margin: 0;
     padding: 0;
-    background-color: #f9f9f9;
-    color: #333;
+    background-image: url('/static/images/image.jpg'); /* Use absolute path from the root */
+    background-size: cover;
+    background-position: center;
+    background-attachment: fixed; /* Optional: keeps the background fixed during scrolling */
+    color: #1f1b1c;
 }
 
-h1 {
+header, footer {
+    background-color: #ffc001;
+    color: #fff;
+    padding: 10px 0;
     text-align: center;
-    color: #4CAF50;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
 }
 
-form {
-    margin: 20px 0;
+h1, h2 {
+    text-align: center;
+    color: #1f1b1c;
+}
+
+/* Container styling */
+.container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    gap: 20px;
+}
+
+/* Form container (Calculate Score) */
+.text-input-container {
+    width: 80%;
+    padding: 15px;
+    background: rgba(255, 255, 255, 0); /* Transparent background */
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0);
+    margin-bottom: 20px; /* Add spacing below the form */
+}
+
+.text-input-container form {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.text-input-container label {
+    font-size: 18px;
+    margin-bottom: 10px;
+        display: block;
+        font-size: 1.5em;
+        margin-block-start: 0.83em;
+        margin-block-end: 0.83em;
+        margin-inline-start: 0px;
+        margin-inline-end: 0px;
+        font-weight: bold;
+        unicode-bidi: isolate;
+}
+
+.text-input-container textarea {
+    width: 88%;
     padding: 10px;
-    background: #fff;
-    border: 1px solid #ccc;
+    margin-bottom: 15px;
+    border: 1px solid #ffc001;
     border-radius: 5px;
-    max-width: 500px;
-    margin: 0 auto;
+    resize: vertical;
+    font-size: 16px;
+    color: #333;
+    background-color: #ffc00124;/* Light background color */
+    transition: background-color 0.3s ease;
 }
 
-textarea {
-    width: 100%;
-    padding: 10px;
-    margin: 10px 0;
-    border: 1px solid #ccc;
-    border-radius: 5px;
-}
-
-button {
-    padding: 10px 15px;
-    background: #4CAF50;
+.text-input-container button {
+    background-color: #b60000;
     color: white;
+    padding: 10px 20px;
     border: none;
     border-radius: 5px;
+    font-size: 16px;
     cursor: pointer;
+    transition: background-color 0.3s ease;
 }
 
-button:hover {
-    background: #45a049;
+.text-input-container button:hover {
+    background-color: #1f1b1c;
 }
 
-#scoreResult {
+.text-input-container #scoreResult {
     margin-top: 15px;
     font-size: 16px;
-    color: #555;
+    font-weight: bold;
+    padding: 20px;
+    background-color: rgba(255, 255, 255, 0); /* Light background with transparency */
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0);
+    width: 80%; /* Adjust width to control box size */
+    text-align: center;
+    margin-left: auto;
+    margin-right: auto;
+}
+/* Left side content (Previous Records) */
+.results-container {
+    display: flex;
+    flex-direction: column;
+    width: 80%;
+    padding: 15px;
+    background: rgba(255, 255, 255, 0); /* Transparent background */
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0);
 }
 
+.results-container h2 {
+    margin-bottom: 15px;
+    color: #1f1b1c;
+}
+
+/* Scatterplot container styling */
+canvas {
+    display: block;
+    width: 100%;
+    max-width: 800px;
+    margin: 20px auto;
+    background: #fff;
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* Table styling */
 table {
     width: 100%;
     border-collapse: collapse;
-    margin-top: 20px;
     background: #fff;
+    border-radius: 10px;
+    overflow: hidden;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
 }
 
 table th, table td {
-    border: 1px solid #ccc;
-    padding: 10px;
-    text-align: center;
+    padding: 12px;
+    border: 1px solid #ddd;
+    text-align: left;
+    font-size: 14px;
 }
 
 table th {
-    background-color: #f2f2f2;
+    background-color: #ffc001;
+    color: #444444;
+    font-weight: bold;
 }
 
 table tr:nth-child(even) {
     background-color: #f9f9f9;
 }
 
-div {
+table tr:hover {
+    background-color: #f1f1f1;
+}
+
+/* Pagination styling */
+.pagination-container {
     text-align: center;
-    margin-top: 20px;
+    margin-top: 10px;
 }
 
-div a {
-    margin: 0 5px;
-    padding: 5px 10px;
-    background: #4CAF50;
-    color: white;
+.pagination-container span {
+    display: inline-block;
+    margin: 0 10px;
+}
+
+.pagination-container a {
+    color: #007bff;
     text-decoration: none;
-    border-radius: 3px;
 }
 
-div a:hover {
-    background: #45a049;
-}
-
-span {
-    font-weight: bold;
+.pagination-container a:hover {
+    text-decoration: underline;
 }

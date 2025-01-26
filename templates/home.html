@@ -8,33 +8,29 @@
     <link rel="stylesheet" href="/static/css/styles.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script>
-        // Function to fetch all data from the backend and plot the scatterplot
         async function fetchAndPlotGraph() {
             try {
-                const response = await fetch('/get_all_scores/'); // Replace with the actual endpoint
+                const response = await fetch('/get_all_scores/');
                 if (!response.ok) {
                     throw new Error(`HTTP error! status: ${response.status}`);
                 }
 
                 const data = await response.json();
 
-                // Extracting x and y data from the response
                 const xData = data.map(record => record.neutral_score);
                 const yData = data.map(record => record.education_score);
 
-                // Preparing the data for Chart.js
                 const chartData = {
                     labels: xData,
                     datasets: [{
                         label: 'Education vs Neutral Score',
                         data: data.map(record => ({ x: record.neutral_score, y: record.education_score })),
-                        backgroundColor: 'rgba(75, 192, 192, 0.6)',
-                        borderColor: 'rgba(75, 192, 192, 1)',
+                        backgroundColor: 'rgba(255, 0, 0, 0.6)',
+                        borderColor: 'rgba(255, 0, 0, 0.6)',
                         borderWidth: 1
                     }]
                 };
 
-                // Chart configuration
                 const config = {
                     type: 'scatter',
                     data: chartData,
@@ -45,10 +41,10 @@
                                     display: true,
                                     text: 'Neutral Score'
                                 },
-                                min: 0, // x-axis range from 0 to 1
+                                min: 0,
                                 max: 1,
                                 ticks: {
-                                    stepSize: 0.05, // x-axis tick spacing of 0.05
+                                    stepSize: 0.05,
                                 }
                             },
                             y: {
@@ -56,10 +52,10 @@
                                     display: true,
                                     text: 'Education Score'
                                 },
-                                min: -1, // y-axis range from -1 to 1
+                                min: -1,
                                 max: 1,
                                 ticks: {
-                                    stepSize: 0.1, // y-axis tick spacing of 0.1
+                                    stepSize: 0.1,
                                 }
                             }
                         },
@@ -71,7 +67,6 @@
                     }
                 };
 
-                // Create and render the chart
                 const ctx = document.getElementById('scatterChart').getContext('2d');
                 new Chart(ctx, config);
             } catch (error) {
@@ -80,17 +75,14 @@
             }
         }
 
-        // Function to calculate the score
         async function calculateScore() {
             const inputText = document.getElementById('inputText').value.trim();
 
-            // Check if input text is empty
             if (!inputText) {
                 document.getElementById('scoreResult').innerText = 'Please enter some text.';
                 return;
             }
 
-            // Get CSRF token from the meta tag
             const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
 
             try {
@@ -100,12 +92,12 @@
                     method: 'POST',
                     body: new URLSearchParams({
                         input_text: inputText,
-                        csrfmiddlewaretoken: csrfToken  // CSRF token included in the POST data
+                        csrfmiddlewaretoken: csrfToken
                     }),
                     headers: {
                         'Content-Type': 'application/x-www-form-urlencoded',
                     },
-                    credentials: 'same-origin',  // Ensures cookies (CSRF token) are sent with the request
+                    credentials: 'same-origin',
                 });
 
                 console.log('Response received:', response);
@@ -114,7 +106,6 @@
                     const data = await response.json();
                     console.log('Response data:', data);
 
-                    // Displaying the result
                     document.getElementById('scoreResult').innerHTML = `
                         <strong>Education Score:</strong> ${data.education_raw_score} <br>
                         <strong>Toxicity:</strong> ${data.toxicity} <br>
@@ -133,71 +124,82 @@
             }
         }
 
-        // Call the function to fetch and plot graph when the page loads
         window.onload = fetchAndPlotGraph;
     </script>
 </head>
 <body>
-<h1>Text Score Calculator</h1>
+<header>
+    <h1>Text Score Calculator</h1>
+</header>
+<main class="container">
+    <!-- Section for Entering Text and Calculating Score -->
+    <div class="text-input-container">
+        <form onsubmit="event.preventDefault(); calculateScore();">
+            <label for="inputText">Enter Text</label>
+            <textarea id="inputText" rows="4"></textarea>
+            <button type="submit">Calculate Score</button>
+        </form>
+        <div id="scoreResult"></div>
+    </div>
 
-<form onsubmit="event.preventDefault(); calculateScore();">
-    <label for="inputText">Enter Text:</label>
-    <textarea id="inputText" rows="4" cols="50"></textarea>
-    <button type="submit">Calculate Score</button>
-</form>
+    <!-- Section for Previous Records (moved between Calculate Score and Scatterplot) -->
+    <div class="results-container">
+        <h2>Previous Records</h2>
+        <table class="records-table">
+            <thead>
+            <tr>
+                <th>Text</th>
+                <th>Education Score</th>
+                <th>Neutral Score</th>
+                <th>Toxic Score</th>
+                <th>Toxicity Classification</th>
+            </tr>
+            </thead>
+            <tbody>
+            {% for record in page_obj %}
+            <tr>
+                <td>{{ record.entered_text }}</td>
+                <td>{{ record.education_score }}</td>
+                <td>{{ record.toxicity_score_normal }}</td>
+                <td>{{ record.toxicity_score_toxic }}</td>
+                <td>
+                    {% if record.toxicity_score_normal > record.toxicity_score_toxic %}
+                    Normal
+                    {% else %}
+                    Toxic
+                    {% endif %}
+                </td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="5">No records found</td>
+            </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+        <div class="pagination-container">
+            <span>
+                {% if page_obj.has_previous %}
+                <a href="?page={{ page_obj.previous_page_number }}">Previous</a>
+                {% endif %}
+            </span>
+            <span>Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
+            <span>
+                {% if page_obj.has_next %}
+                <a href="?page={{ page_obj.next_page_number }}">Next</a>
+                {% endif %}
+            </span>
+        </div>
+    </div>
 
-<p id="scoreResult"></p>
-
-<h2>Education Score vs Neutral Score Scatterplot</h2>
-<canvas id="scatterChart" width="600" height="400"></canvas>
-
-<h2>Previous Records</h2>
-<table border="1">
-    <thead>
-    <tr>
-        <th>Text</th>
-        <th>Education Score</th>
-        <th>Neutral Score</th>
-        <th>Toxic Score</th>
-        <th>Toxicity Classification</th>
-    </tr>
-    </thead>
-    <tbody>
-    {% for record in page_obj %}
-    <tr>
-        <td>{{ record.entered_text }}</td>
-        <td>{{ record.education_score }}</td>
-        <td>{{ record.toxicity_score_normal }}</td>
-        <td>{{ record.toxicity_score_toxic }}</td>
-        <td>
-            {% if record.toxicity_score_normal > record.toxicity_score_toxic %}
-            Normal
-            {% else %}
-            Toxic
-            {% endif %}
-        </td>
-    </tr>
-    {% empty %}
-    <tr>
-        <td colspan="5">No records found</td>
-    </tr>
-    {% endfor %}
-    </tbody>
-</table>
-
-<div>
-    <span>
-        {% if page_obj.has_previous %}
-        <a href="?page={{ page_obj.previous_page_number }}">Previous</a>
-        {% endif %}
-    </span>
-    <span>Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
-    <span>
-        {% if page_obj.has_next %}
-        <a href="?page={{ page_obj.next_page_number }}">Next</a>
-        {% endif %}
-    </span>
-</div>
-
+    <!-- Section for Scatter Plot -->
+    <section>
+        <h2>Education Score vs Neutral Score Scatterplot</h2>
+        <canvas id="scatterChart"></canvas>
+    </section>
+</main>
+<footer>
+    <p>&copy; 2025 Text Score Calculator</p>
+</footer>
 </body>
 </html>
