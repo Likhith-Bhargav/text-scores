@@ -25,7 +25,7 @@ SECRET_KEY = 'django-insecure-c4a@sh=*^!2&o7w7p16ar3*3gv_s&2=nsn)q71wxss!_m1526d
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['likhith-bhargav.github.io', 'www.likhith-bhargav.github.io', '127.0.0.1']
+ALLOWED_HOSTS = ['likhith-bhargav.github.io', 'www.likhith-bhargav.github.io', '127.0.0.1', 'localhost']
 
 # Application definition
 
@@ -89,7 +89,6 @@ DATABASES = {
         'PORT': config('DB_PORT', default='5432'),
     }
 }
-
 
 # Password validation
 # https://docs.djangoproject.com/en/4.2/ref/settings/#auth-password-validators
